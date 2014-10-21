@@ -9,7 +9,7 @@ Package.describe({
   name: 'ianhorst:bower',
   summary: 'Meteor bower [EXPERIMENTAL]',
   version: '0.0.1',
-  git: 'git://github.com/ianhorst/meteor-bower.git'
+  git: 'https://github.com/ianhorst/meteor-bower.git'
 });
 
 Package.onUse(function(api) {
