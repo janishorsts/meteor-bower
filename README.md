@@ -1,3 +1,34 @@
-EXPERIMENTAL
+meteor-bower
+============
 
-Use bower as usual and add only certain files to meteor project.
+
+Installing
+----------
+
+```shell
+$ meteor install ianhorst:bower
+```
+
+Bower
+-----
+
+Use bower as usual. For example, to install Zurb Foundation
+
+```shell
+$ bower install foundation --save
+```
+
+Adding files to meteor project
+------------------------------
+
+By default bower components are installed into .meteor/local/bower_components directory. Target directory can be changed by modifying .bowerrc file in the root of the project.
+
+Modify meteor-bower.json to add files to your project.
+
+```json
+{
+  "files": [
+    "foundation/js/foundation.js"
+  ]
+}
+```
