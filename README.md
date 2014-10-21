@@ -6,7 +6,7 @@ Installing
 ----------
 
 ```shell
-$ meteor install ianhorst:bower
+$ meteor add ianhorst:bower
 ```
 
 Bower

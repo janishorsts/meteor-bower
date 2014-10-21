@@ -26,13 +26,28 @@ Package.onUse(function(api) {
     });
   };
 
-  var readBowerConfig = function () {
+  var writeBowerConfig = function () {
     return when.promise(function (resolve) {
-      js.readFile('.bowerrc', function (err, config) {
-        var defaults = {directory: 'bower_components'};
-        config = _.defaults(config || {}, defaults);
-
+      var config = {directory: '.meteor/local/bower_components'};
+      js.writeFile('.bowerrc', config, function () {
         resolve(config);
+      });
+    });
+  };
+
+  var readBowerConfig = function () {
+    return when.promise(function (resolve, reject) {
+      js.readFile('.bowerrc', function (err, config) {
+        if (err && err.errno === 34) {
+          writeBowerConfig().done(resolve);
+        } else if (err) {
+          reject();
+        } else {
+          var defaults = {directory: 'bower_components'}; // todo default target directory can't be used in meteor
+          config = _.defaults(config, defaults);
+
+          resolve(config);
+        }
       });
     })
   };
@@ -41,14 +56,18 @@ Package.onUse(function(api) {
     var bowerrc = bowerConfigResolved[0];
 
     js.readFile('meteor-bower.json', function (err, config) {
-      var defaults = {files: []};
-      config = _.defaults(config, defaults);
+      if (err && err.errno === 34) {
+        js.writeFile('meteor-bower.json', {files:[]});
+      } else {
+        var defaults = {files: []};
+        config = _.defaults(config, defaults);
 
-      var files = _.map(config.files, function (file) {
-        return process.cwd() + '/' + bowerrc.directory + '/' + file;
-      });
+        var files = _.map(config.files, function (file) {
+          return process.cwd() + '/' + bowerrc.directory + '/' + file;
+        });
 
-      api.addFiles(files, 'client');
+        api.addFiles(files, 'client');
+      }
     });
   });
 });
