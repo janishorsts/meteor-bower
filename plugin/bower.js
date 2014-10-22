@@ -58,3 +58,5 @@ Plugin.registerSourceHandler('meteor-bower.json', function (compileStep) {
 		});
 	});
 });
+
+Plugin.registerSourceHandler('json', function () {});
