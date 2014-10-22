@@ -12,7 +12,10 @@
   "pluginDependencies": [
     [
       "bower",
-      {}
+      {
+        "underscore": "1.0.1",
+        "meteor": "1.1.2"
+      }
     ]
   ],
   "toolVersion": "meteor-tool@1.0.34",

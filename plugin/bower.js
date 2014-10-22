@@ -1,69 +1,57 @@
-var js = Npm.require('jsonfile'),
-	_ = Npm.require('lodash'),
+var js  = Npm.require('jsonfile'),
 	bower = Npm.require('bower'),
-	when = Npm.require('when'),
-	fs = Npm.require('fs'),
-	path = Npm.require('path');
+	fs    = Npm.require('fs'),
+	path  = Npm.require('path');
 
+
+var readBowerConfig = function () {
+	var result = js.readFileSync('.bowerrc', {throws: false});
+
+	if (!result) {
+		result = {directory: '.meteor/local/bower_components'};
+		js.writeFileSync('.bowerrc', result);
+	}
+
+	return result;
+};
+
+var readMeteorBowerConfig = function () {
+	var result = js.readFileSync('meteor-bower.json', {throws: false});
+	if (!result) {
+		result = {files: []};
+		js.writeFileSync('meteor-bower.json', result);
+	}
+	return result;
+};
+
+var installBowerComponents  = Meteor.wrapAsync(function() {
+	argsArray = _.toArray(arguments);
+	var callback = argsArray.pop();
+	bower.commands.install
+		.apply(this, argsArray)
+		.on('end', function(res) { callback(null, res); })
+		.on('error', function(err) { callback(err, null); });
+});
 
 var handler = function (compileStep) {
-	var installBowerComponents = function () {
-		return when.promise(function (resolve) {
-			bower.commands.install().on('end', resolve);
-		});
-	};
+	console.log('handle now');
+	var bowerrc = readBowerConfig();
 
-	var writeBowerConfig = function () {
-		return when.promise(function (resolve) {
-			var config = {directory: '.meteor/local/bower_components'};
-			js.writeFile('.bowerrc', config, function () {
-				resolve(config);
-			});
-		});
-	};
+	installBowerComponents();
 
-	var readBowerConfig = function () {
-		return when.promise(function (resolve, reject) {
-			js.readFile('.bowerrc', function (err, config) {
-				if (err && err.errno === 34) {
-					writeBowerConfig().done(resolve);
-				} else if (err) {
-					reject();
-				} else {
-					var defaults = {directory: 'bower_components'}; // todo default target directory can't be used in meteor
-					config = _.defaults(config, defaults);
+	var config = readMeteorBowerConfig();
 
-					resolve(config);
-				}
-			});
-		})
-	};
+	config.files.forEach(function (file) {
+		var sourcePath = path.join(process.cwd(), bowerrc.directory, file);
 
-	when.all([readBowerConfig(), installBowerComponents()]).done(function (bowerConfigResolved) {
-		var bowerrc = bowerConfigResolved[0];
-
-		js.readFile('meteor-bower.json', function (err, config) {
-			if (err && err.errno === 34) {
-				js.writeFile('meteor-bower.json', {files:[]});
-			} else {
-				var defaults = {files: []};
-				config = _.defaults(config, defaults);
-
-				config.files.forEach(function (file) {
-					var sourcePath = path.join(process.cwd(), bowerrc.directory, file);
-
-					fs.readFile(sourcePath, function (err, source) {
-						var targetPath = path.join('packages/bower_components', file);
-						console.log('adding ', sourcePath);
-						compileStep.addJavaScript({
-							path: targetPath,
-							sourcePath: sourcePath,
-							data: source.toString(),
-							bare: true
-						});
-					});
-				});
-			}
+		jsSource = fs.readFileSync(sourcePath);
+		var targetPath = path.join('packages/bower_components', file);
+		console.log('adding %s as %s', sourcePath, targetPath);
+		compileStep.addJavaScript({
+			path: targetPath,
+			sourcePath: sourcePath,
+			data: jsSource.toString(),
+			bare: true
 		});
 	});
 };
