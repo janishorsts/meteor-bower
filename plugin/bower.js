@@ -1,12 +1,12 @@
 var js = Npm.require('jsonfile'),
 	_ = Npm.require('lodash'),
 	bower = Npm.require('bower'),
-	when = Npm.require('when');
+	when = Npm.require('when'),
+	fs = Npm.require('fs'),
+	path = Npm.require('path');
 
 
-Plugin.registerSourceHandler('meteor-bower.json', function (compileStep) {
-	api.versionsFrom('0.9.4');
-
+var handler = function (compileStep) {
 	var installBowerComponents = function () {
 		return when.promise(function (resolve) {
 			bower.commands.install().on('end', resolve);
@@ -49,12 +49,24 @@ Plugin.registerSourceHandler('meteor-bower.json', function (compileStep) {
 				var defaults = {files: []};
 				config = _.defaults(config, defaults);
 
-				var files = _.map(config.files, function (file) {
-					return process.cwd() + '/' + bowerrc.directory + '/' + file;
-				});
+				config.files.forEach(function (file) {
+					var sourcePath = path.join(process.cwd(), bowerrc.directory, file);
 
-				api.addFiles(files, 'client');
+					fs.readFile(sourcePath, function (err, source) {
+						var targetPath = path.join('packages/bower_components', file);
+						console.log('adding ', sourcePath);
+						compileStep.addJavaScript({
+							path: targetPath,
+							sourcePath: sourcePath,
+							data: source.toString(),
+							bare: true
+						});
+					});
+				});
 			}
 		});
 	});
-});
+};
+
+Plugin.registerSourceHandler('json', function () {});
+Plugin.registerSourceHandler('meteor-bower.json', {archMatching: "web"}, handler);
