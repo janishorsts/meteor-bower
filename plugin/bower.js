@@ -24,11 +24,10 @@ var readMeteorBowerConfig = function () {
 	return result;
 };
 
-var installBowerComponents  = Meteor.wrapAsync(function() {
+var installBowerComponents  = Meteor.wrapAsync(function(bowerrc) {
 	argsArray = _.toArray(arguments);
 	var callback = argsArray.pop();
-	bower.commands.install
-		.apply(this, argsArray)
+	bower.commands.install(null, null, bowerrc)
 		.on('end', function(res) { callback(null, res); })
 		.on('error', function(err) { callback(err, null); });
 });
@@ -37,7 +36,7 @@ var handler = function (compileStep) {
 	console.log('handle now');
 	var bowerrc = readBowerConfig();
 
-	installBowerComponents();
+	installBowerComponents(bowerrc);
 
 	var config = readMeteorBowerConfig();
 
