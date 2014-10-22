@@ -5,7 +5,7 @@ Package.describe({
   git: 'https://github.com/ianhorst/meteor-bower.git'
 });
 
-Package._transitional_registerBuildPlugin({
+Package.registerBuildPlugin({
   name: "bower",
   use: [],
   sources: [
