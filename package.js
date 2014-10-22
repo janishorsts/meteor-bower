@@ -5,10 +5,6 @@ Package.describe({
   git: 'https://github.com/ianhorst/meteor-bower.git'
 });
 
-Package.onUse(function(api) {
-  api.addFiles('plugin/bower.js');
-});
-
 Package._transitional_registerBuildPlugin({
   name: "bower",
   use: [],
